@@ -1,0 +1,8 @@
+git clone https://github.com/Asbah-domainhello/smart-file-organizer.git
+cd smart-file-organizer/backend
+
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Run Flask server
+python app.py
