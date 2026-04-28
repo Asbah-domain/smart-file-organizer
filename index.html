@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Calculator</title>
+    <style>
+      :root {
+        --bg0: #0b0d10;
+        --bg1: #11161d;
+        --panel: rgba(255, 255, 255, 0.06);
+        --panel2: rgba(255, 255, 255, 0.09);
+        --stroke: rgba(255, 255, 255, 0.12);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.68);
+        --shadow: 0 20px 70px rgba(0, 0, 0, 0.55);
+        --glow: 0 0 0 1px rgba(255, 255, 255, 0.08),
+          0 16px 40px rgba(0, 0, 0, 0.55);
+        --op: #ffb020;
+        --opText: #201400;
+        --eq: #64d2ff;
+        --eqText: #00131a;
+        --danger: #ff5b5b;
+        --radius: 22px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        background: radial-gradient(1200px 900px at 50% 20%, #18202b 0%, var(--bg0) 55%),
+          radial-gradient(900px 700px at 20% 70%, #131a22 0%, transparent 55%),
+          radial-gradient(900px 700px at 80% 75%, #10151c 0%, transparent 55%);
+        color: var(--text);
+        display: grid;
+        place-items: center;
+        padding: 22px;
+      }
+
+      .page {
+        width: min(520px, 100%);
+      }
+
+      /* Cockroach silhouette wrapper */
+      .roach {
+        position: relative;
+        width: 100%;
+        padding: 58px 18px 18px;
+        filter: drop-shadow(var(--shadow));
+      }
+
+      .roach__shell {
+        position: relative;
+        width: 100%;
+        border-radius: 42px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: var(--glow);
+        overflow: hidden;
+      }
+
+      .roach__shell::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(120px 80px at 50% 18%, rgba(0, 0, 0, 0.32) 0%, transparent 70%),
+          radial-gradient(260px 200px at 50% 35%, rgba(0, 0, 0, 0.28) 0%, transparent 72%),
+          radial-gradient(340px 260px at 50% 68%, rgba(0, 0, 0, 0.20) 0%, transparent 75%),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.08));
+        opacity: 0.9;
+        pointer-events: none;
+      }
+
+      .roach__shell::after {
+        content: "";
+        position: absolute;
+        inset: -40px 0 -18px 0;
+        background:
+          linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.10) 46%,
+            rgba(255, 255, 255, 0.04) 50%,
+            rgba(255, 255, 255, 0.10) 54%,
+            transparent 100%
+          ),
+          repeating-linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0.22) 0px,
+            rgba(0, 0, 0, 0.22) 2px,
+            transparent 2px,
+            transparent 44px
+          );
+        opacity: 0.22;
+        pointer-events: none;
+        mask-image: radial-gradient(closest-side at 50% 40%, rgba(0, 0, 0, 1) 70%, transparent 100%);
+      }
+
+      .roach__shellTail {
+        position: absolute;
+        left: 50%;
+        bottom: -18px;
+        width: min(260px, 72%);
+        height: 42px;
+        transform: translateX(-50%);
+        border-radius: 0 0 999px 999px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.25));
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        opacity: 0.9;
+        pointer-events: none;
+      }
+
+      .roach__head {
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        width: min(240px, 70%);
+        height: 74px;
+        transform: translateX(-50%);
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.35), rgba(255, 255, 255, 0.05));
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        z-index: 2;
+        pointer-events: none;
+      }
+
+      .roach__antenna {
+        position: absolute;
+        top: -6px;
+        width: 170px;
+        height: 80px;
+        border-top: 2px solid rgba(255, 255, 255, 0.22);
+        border-radius: 140px 140px 0 0;
+        opacity: 0.9;
+        pointer-events: none;
+      }
+      .roach__antenna--left {
+        left: 10px;
+        transform: rotate(-18deg);
+      }
+      .roach__antenna--right {
+        right: 10px;
+        transform: rotate(18deg);
+      }
+
+      .roach__legs {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .roach__leg {
+        position: absolute;
+        width: 240px;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.20);
+        transform-origin: 0 50%;
+        opacity: 0.75;
+      }
+      .roach__leg::after {
+        content: "";
+        position: absolute;
+        right: -12px;
+        top: -2px;
+        width: 18px;
+        height: 6px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.18);
+      }
+      .roach__leg--l1 {
+        left: -16px;
+        top: 125px;
+        transform: rotate(18deg);
+      }
+      .roach__leg--l2 {
+        left: -18px;
+        top: 235px;
+        transform: rotate(8deg);
+      }
+      .roach__leg--l3 {
+        left: -14px;
+        top: 345px;
+        transform: rotate(-6deg);
+      }
+      .roach__leg--r1 {
+        right: -16px;
+        top: 125px;
+        transform: rotate(162deg);
+      }
+      .roach__leg--r2 {
+        right: -18px;
+        top: 235px;
+        transform: rotate(172deg);
+      }
+      .roach__leg--r3 {
+        right: -14px;
+        top: 345px;
+        transform: rotate(186deg);
+      }
+
+      /* Calculator UI */
+      .calculator {
+        position: relative;
+        padding: 14px;
+        z-index: 3;
+      }
+
+      .display {
+        border-radius: var(--radius);
+        padding: 16px 16px 14px;
+        background: rgba(0, 0, 0, 0.30);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        backdrop-filter: blur(10px);
+      }
+
+      .expression {
+        font-variant-numeric: tabular-nums;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.25;
+        min-height: 18px;
+        letter-spacing: 0.2px;
+        user-select: none;
+      }
+
+      .result {
+        display: block;
+        margin-top: 10px;
+        font-variant-numeric: tabular-nums;
+        font-size: clamp(28px, 7vw, 44px);
+        line-height: 1.05;
+        letter-spacing: -0.6px;
+        text-align: right;
+        overflow-wrap: anywhere;
+      }
+
+      .keys {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+
+      .key {
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        border-radius: 18px;
+        padding: 14px 12px;
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+        transition: transform 80ms ease, background 120ms ease, border-color 120ms ease;
+        user-select: none;
+      }
+      .key:hover {
+        background: rgba(255, 255, 255, 0.10);
+        border-color: rgba(255, 255, 255, 0.18);
+      }
+      .key:active {
+        transform: translateY(1px) scale(0.99);
+      }
+      .key:focus-visible {
+        outline: 2px solid rgba(100, 210, 255, 0.8);
+        outline-offset: 2px;
+      }
+      .key:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .key--muted {
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .key--op {
+        background: rgba(255, 176, 32, 0.16);
+        border-color: rgba(255, 176, 32, 0.28);
+        color: rgba(255, 255, 255, 0.92);
+      }
+      .key--eq {
+        background: rgba(100, 210, 255, 0.22);
+        border-color: rgba(100, 210, 255, 0.35);
+        color: var(--eqText);
+        font-weight: 650;
+      }
+      .key--wide {
+        grid-column: span 2;
+      }
+
+      .display.is-error {
+        border-color: rgba(255, 91, 91, 0.5);
+        box-shadow: 0 0 0 1px rgba(255, 91, 91, 0.15);
+      }
+
+      @media (max-width: 420px) {
+        .roach {
+          padding-top: 52px;
+        }
+        .roach__antenna {
+          width: 140px;
+        }
+        .roach__leg {
+          width: 190px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="roach" aria-label="Cockroach calculator">
+        <div class="roach__head" aria-hidden="true">
+          <div class="roach__antenna roach__antenna--left" aria-hidden="true"></div>
+          <div class="roach__antenna roach__antenna--right" aria-hidden="true"></div>
+        </div>
+
+        <div class="roach__legs" aria-hidden="true">
+          <div class="roach__leg roach__leg--l1" aria-hidden="true"></div>
+          <div class="roach__leg roach__leg--l2" aria-hidden="true"></div>
+          <div class="roach__leg roach__leg--l3" aria-hidden="true"></div>
+          <div class="roach__leg roach__leg--r1" aria-hidden="true"></div>
+          <div class="roach__leg roach__leg--r2" aria-hidden="true"></div>
+          <div class="roach__leg roach__leg--r3" aria-hidden="true"></div>
+        </div>
+
+        <div class="roach__shell">
+          <div class="roach__shellTail" aria-hidden="true"></div>
+          <div class="calculator" aria-label="Calculator">
+            <div class="display" role="group" aria-label="Display">
+              <div class="expression" aria-label="Expression"></div>
+              <output class="result" aria-label="Result" aria-live="polite">0</output>
+            </div>
+
+            <div class="keys" role="group" aria-label="Calculator keys">
+              <button class="key key--muted" type="button" data-action="clear" aria-label="All clear">AC</button>
+              <button class="key key--muted" type="button" data-action="toggleSign" aria-label="Toggle sign">±</button>
+              <button class="key key--muted" type="button" data-action="percent" aria-label="Percent">%</button>
+              <button class="key key--op" type="button" data-op="divide" aria-label="Divide">÷</button>
+
+              <button class="key" type="button" data-digit="7">7</button>
+              <button class="key" type="button" data-digit="8">8</button>
+              <button class="key" type="button" data-digit="9">9</button>
+              <button class="key key--op" type="button" data-op="multiply" aria-label="Multiply">×</button>
+
+              <button class="key" type="button" data-digit="4">4</button>
+              <button class="key" type="button" data-digit="5">5</button>
+              <button class="key" type="button" data-digit="6">6</button>
+              <button class="key key--op" type="button" data-op="subtract" aria-label="Subtract">−</button>
+
+              <button class="key" type="button" data-digit="1">1</button>
+              <button class="key" type="button" data-digit="2">2</button>
+              <button class="key" type="button" data-digit="3">3</button>
+              <button class="key key--op" type="button" data-op="add" aria-label="Add">+</button>
+
+              <button class="key key--wide" type="button" data-digit="0">0</button>
+              <button class="key" type="button" data-action="decimal" aria-label="Decimal point">.</button>
+              <button class="key key--eq" type="button" data-action="equals" aria-label="Equals">=</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      (() => {
+        const el = {
+          calc: document.querySelector(".calculator"),
+          display: document.querySelector(".display"),
+          expr: document.querySelector(".expression"),
+          result: document.querySelector(".result"),
+          keys: document.querySelector(".keys"),
+        };
+
+        /** @type {{entry: string, acc: number|null, pendingOp: null|'add'|'subtract'|'multiply'|'divide', lastOp: null|'add'|'subtract'|'multiply'|'divide', lastRhs: number|null, justEvaluated: boolean, error: string|null}} */
+        const state = {
+          entry: "0",
+          acc: null,
+          pendingOp: null,
+          lastOp: null,
+          lastRhs: null,
+          justEvaluated: false,
+          error: null,
+        };
+
+        const opSymbol = (op) =>
+          op === "add"
+            ? "+"
+            : op === "subtract"
+              ? "−"
+              : op === "multiply"
+                ? "×"
+                : op === "divide"
+                  ? "÷"
+                  : "";
+
+        const isFiniteNumber = (n) => typeof n === "number" && Number.isFinite(n);
+
+        const formatNumber = (n) => {
+          if (!isFiniteNumber(n)) return "Error";
+          const abs = Math.abs(n);
+          if (abs !== 0 && (abs >= 1e12 || abs < 1e-9)) {
+            return n.toExponential(10).replace(/0+e/, "e").replace(/\.e/, "e");
+          }
+          // Round to avoid binary floating noise for display
+          const rounded = Math.round((n + Number.EPSILON) * 1e12) / 1e12;
+          return String(rounded);
+        };
+
+        const setError = (msg) => {
+          state.error = msg;
+          state.justEvaluated = true;
+          el.display.classList.add("is-error");
+          el.expr.textContent = msg;
+          el.result.textContent = "Error";
+        };
+
+        const clearError = () => {
+          state.error = null;
+          el.display.classList.remove("is-error");
+        };
+
+        const resetAll = () => {
+          state.entry = "0";
+          state.acc = null;
+          state.pendingOp = null;
+          state.lastOp = null;
+          state.lastRhs = null;
+          state.justEvaluated = false;
+          clearError();
+          render();
+        };
+
+        const entryToNumber = () => {
+          const n = Number(state.entry);
+          return Number.isFinite(n) ? n : 0;
+        };
+
+        const applyOp = (lhs, op, rhs) => {
+          if (op === "add") return lhs + rhs;
+          if (op === "subtract") return lhs - rhs;
+          if (op === "multiply") return lhs * rhs;
+          if (op === "divide") return rhs === 0 ? null : lhs / rhs;
+          return rhs;
+        };
+
+        const render = () => {
+          if (state.error) return;
+
+          const entryNum = entryToNumber();
+          const shown = state.justEvaluated && state.acc !== null ? state.acc : entryNum;
+
+          let expr = "";
+          if (state.pendingOp && state.acc !== null) {
+            expr = `${formatNumber(state.acc)} ${opSymbol(state.pendingOp)}`;
+            if (!state.justEvaluated) expr += ` ${state.entry}`;
+          } else if (state.lastOp && state.lastRhs !== null && state.acc !== null && state.justEvaluated) {
+            expr = `${formatNumber(state.acc)} ${opSymbol(state.lastOp)} ${formatNumber(state.lastRhs)}`;
+          }
+
+          el.expr.textContent = expr;
+          el.result.textContent = formatNumber(shown);
+        };
+
+        const startNewEntryIfNeeded = () => {
+          if (state.justEvaluated) {
+            // If user types a digit after equals, start fresh
+            state.acc = null;
+            state.pendingOp = null;
+            state.lastOp = null;
+            state.lastRhs = null;
+            state.entry = "0";
+            state.justEvaluated = false;
+          }
+        };
+
+        const inputDigit = (d) => {
+          if (state.error) resetAll();
+          startNewEntryIfNeeded();
+          if (state.entry === "0") state.entry = d;
+          else state.entry += d;
+          render();
+        };
+
+        const inputDecimal = () => {
+          if (state.error) resetAll();
+          startNewEntryIfNeeded();
+          if (!state.entry.includes(".")) state.entry += ".";
+          render();
+        };
+
+        const backspace = () => {
+          if (state.error) return resetAll();
+          if (state.justEvaluated) return;
+          if (state.entry.length <= 1) state.entry = "0";
+          else state.entry = state.entry.slice(0, -1);
+          if (state.entry === "-" || state.entry === "-0") state.entry = "0";
+          render();
+        };
+
+        const toggleSign = () => {
+          if (state.error) resetAll();
+          if (state.justEvaluated && state.acc !== null && state.pendingOp === null) {
+            state.acc = -state.acc;
+            state.entry = formatNumber(state.acc);
+            render();
+            return;
+          }
+          if (state.entry === "0") return;
+          if (state.entry.startsWith("-")) state.entry = state.entry.slice(1);
+          else state.entry = "-" + state.entry;
+          render();
+        };
+
+        const percent = () => {
+          if (state.error) resetAll();
+          const n = entryToNumber();
+          const pct = n / 100;
+          state.entry = formatNumber(pct);
+          state.justEvaluated = false;
+          render();
+        };
+
+        const chooseOp = (op) => {
+          if (state.error) resetAll();
+
+          const rhs = entryToNumber();
+          if (state.acc === null) {
+            state.acc = rhs;
+          } else if (state.pendingOp && !state.justEvaluated) {
+            const next = applyOp(state.acc, state.pendingOp, rhs);
+            if (next === null) return setError("Cannot divide by 0");
+            state.acc = next;
+          }
+
+          state.pendingOp = op;
+          state.entry = "0";
+          state.justEvaluated = false;
+          render();
+        };
+
+        const equals = () => {
+          if (state.error) return;
+
+          if (state.pendingOp && state.acc !== null) {
+            const rhs = state.justEvaluated && state.lastRhs !== null ? state.lastRhs : entryToNumber();
+            const next = applyOp(state.acc, state.pendingOp, rhs);
+            if (next === null) return setError("Cannot divide by 0");
+
+            state.lastOp = state.pendingOp;
+            state.lastRhs = rhs;
+            state.acc = next;
+            state.entry = formatNumber(next);
+            state.pendingOp = null;
+            state.justEvaluated = true;
+            render();
+            return;
+          }
+
+          // Repeat last operation if user presses equals again
+          if (state.lastOp && state.lastRhs !== null) {
+            const lhs = state.acc !== null ? state.acc : entryToNumber();
+            const next = applyOp(lhs, state.lastOp, state.lastRhs);
+            if (next === null) return setError("Cannot divide by 0");
+            state.acc = next;
+            state.entry = formatNumber(next);
+            state.justEvaluated = true;
+            render();
+          }
+        };
+
+        el.keys.addEventListener("click", (e) => {
+          const btn = e.target.closest("button");
+          if (!btn) return;
+
+          const digit = btn.getAttribute("data-digit");
+          const op = btn.getAttribute("data-op");
+          const action = btn.getAttribute("data-action");
+
+          if (digit) return inputDigit(digit);
+          if (op) return chooseOp(op);
+          if (action === "clear") return resetAll();
+          if (action === "toggleSign") return toggleSign();
+          if (action === "percent") return percent();
+          if (action === "decimal") return inputDecimal();
+          if (action === "equals") return equals();
+        });
+
+        window.addEventListener("keydown", (e) => {
+          const k = e.key;
+
+          const isNumberKey = k.length === 1 && k >= "0" && k <= "9";
+          if (isNumberKey) {
+            e.preventDefault();
+            return inputDigit(k);
+          }
+
+          if (k === ".") {
+            e.preventDefault();
+            return inputDecimal();
+          }
+
+          if (k === "%") {
+            e.preventDefault();
+            return percent();
+          }
+
+          if (k === "Enter" || k === "=") {
+            e.preventDefault();
+            return equals();
+          }
+
+          if (k === "Escape") {
+            e.preventDefault();
+            return resetAll();
+          }
+
+          if (k === "Backspace") {
+            e.preventDefault();
+            return backspace();
+          }
+
+          if (k === "+") {
+            e.preventDefault();
+            return chooseOp("add");
+          }
+          if (k === "-") {
+            e.preventDefault();
+            return chooseOp("subtract");
+          }
+          if (k === "*") {
+            e.preventDefault();
+            return chooseOp("multiply");
+          }
+          if (k === "/") {
+            e.preventDefault();
+            return chooseOp("divide");
+          }
+        });
+
+        resetAll();
+      })();
+    </script>
+  </body>
+</html>
